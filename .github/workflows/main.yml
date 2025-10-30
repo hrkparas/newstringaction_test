@@ -31,17 +31,22 @@ jobs:
 
       - name: Create RDP User with Fixed Password
         run: |
-          $plainPassword = "paras1234"
+          $plainPassword = "Paras1234!"
           $securePass = ConvertTo-SecureString $plainPassword -AsPlainText -Force
+          # Remove existing user if present to avoid conflicts
           if (Get-LocalUser -Name "RDP" -ErrorAction SilentlyContinue) {
               Remove-LocalUser -Name "RDP"
           }
+          # Create new user with fixed password
           New-LocalUser -Name "RDP" -Password $securePass -AccountNeverExpires
+          # Add user to Administrators and Remote Desktop Users groups
           Add-LocalGroupMember -Group "Administrators" -Member "RDP"
           Add-LocalGroupMember -Group "Remote Desktop Users" -Member "RDP"
 
+          # Store credentials in environment variables
           echo "RDP_CREDS=User: RDP | Password: $plainPassword" >> $env:GITHUB_ENV
 
+          # Verify user creation
           if (-not (Get-LocalUser -Name "RDP")) {
               Write-Error "User creation failed"
               exit 1
